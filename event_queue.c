@@ -64,7 +64,7 @@ void queue_push(event ev)
     while (((q.in+1)%QUEUE_CAPACITY)==q.out)
     {
         pthread_cond_wait(&(q.cond),&(q.mtx));
-    }
+    }   
     q.queue[q.in]=ev;
     q.out=(q.out + 1)%QUEUE_CAPACITY;
     pthread_cond_broadcast(&(q.cond));
