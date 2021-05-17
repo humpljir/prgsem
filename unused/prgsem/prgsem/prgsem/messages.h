@@ -18,7 +18,8 @@ typedef enum {
    MSG_DONE,             // report the requested work has been done
    MSG_GET_VERSION,      // request version of the firmware
    MSG_VERSION,          // send version of the firmware as major,minor, patch level, e.g., 1.0p1
-   MSG_STARTUP,          // init of the message (id, up to 8 bytes long string, cksum
+   MSG_STARTUP,          // init message (id, up to 9 bytes long string, cksum)
+   MSG_SET_COMPUTE,      // set computation parameters
    MSG_COMPUTE,          // request computation of a batch of tasks (chunk_id, nbr_tasks)
    MSG_COMPUTE_DATA,     // computed result (chunk_id, result)
    MSG_NBR
@@ -37,14 +38,26 @@ typedef struct {
 } msg_startup;
 
 typedef struct {
-   uint16_t chunk_id;
-   uint16_t nbr_tasks;
+   double c_re;  // re (x) part of the c constant in recursive equation
+   double c_im;  // im (y) part of the c constant in recursive equation
+   double d_re;  // increment in the x-coords
+   double d_im;  // increment in the y-coords
+   uint8_t n;    // number of iterations per each pixel
+} msg_set_compute;
+
+typedef struct {
+   uint8_t cid; // chunk id
+   double re;    // start of the x-coords (real)
+   double im;    // start of the y-coords (imaginary)
+   uint8_t n_re; // number of cells in x-coords
+   uint8_t n_im; // number of cells in y-coords
 } msg_compute;
 
 typedef struct {
-   uint16_t chunk_id;
-   uint16_t task_id;
-   uint8_t result;
+   uint8_t cid;  // chunk id
+   uint8_t i_re; // x-coords 
+   uint8_t i_im; // y-coords
+   uint8_t iter; // number of iterations
 } msg_compute_data;
 
 typedef struct {
@@ -52,6 +65,7 @@ typedef struct {
    union {
       msg_version version;
       msg_startup startup;
+      msg_set_compute set_compute;
       msg_compute compute;
       msg_compute_data compute_data;
    } data;

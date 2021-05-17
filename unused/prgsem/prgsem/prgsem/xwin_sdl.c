@@ -5,9 +5,7 @@
  */
 
 #include <assert.h>
-
 #include <SDL.h>
-
 #include <SDL_image.h>
 
 #include "xwin_sdl.h"

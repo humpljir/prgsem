@@ -1,6 +1,10 @@
 #include "mbed.h"
 #include "messages.h"
 
+#define VERSION_MAJOR 0
+#define VERSION_MINOR 1
+#define VERSION_PATCH 3
+
 Serial pc(SERIAL_TX, SERIAL_RX);
 DigitalOut myled(LED1);
 InterruptIn abort_btn(USER_BUTTON);
@@ -23,10 +27,10 @@ bool receive_message(uint8_t *msg_buf, int size, int *len);
 bool send_message(const message *msg, uint8_t *buf, int size);
  
 #define BUF_SIZE 255
-
+ 
 char tx_buffer[BUF_SIZE];
 char rx_buffer[BUF_SIZE];
-
+ 
 // pointers to the circular buffers
 volatile int tx_in = 0;
 volatile int tx_out = 0;
@@ -40,23 +44,23 @@ int main() {
     pc.baud(115200);
     pc.attach(&Rx_interrupt, Serial::RxIrq); // attach interrupt handler to receive data
     pc.attach(&Tx_interrupt, Serial::TxIrq); // attach interrupt handler to transmit data
-
+    
     abort_btn.rise(&pressed);
-
+    
     while (pc.readable()) 
         pc.getc();
-
+        
     message msg = { .type = MSG_STARTUP, .data.startup.message = {'P', 'R', 'G', '-', 'L', 'A', 'B', '1', '0'}};
     uint8_t msg_buf[MESSAGE_SIZE];
     int msg_len;
-
+    
     if (fill_message_buf(&msg, msg_buf, MESSAGE_SIZE, &msg_len)) {
         for (int i = 0; i < msg_len; i++) {
             while (! pc.writable());
             pc.putc(msg_buf[i]); 
         }
     }
-
+    
     struct {
         uint16_t chunk_id;
         uint16_t nbr_tasks;
@@ -64,16 +68,16 @@ int main() {
         bool computing;
     } computation = { 0, 0, 0, false };
     
-    while(1) {
+    while(1) { 
         if (rx_in != rx_out) {
             if (receive_message(msg_buf, MESSAGE_SIZE, &msg_len)) {
                 if (parse_message_buf(msg_buf, msg_len, &msg)) {
                     switch (msg.type) {
                         case MSG_GET_VERSION:
                             msg.type = MSG_VERSION;
-                            msg.data.version.major = 0;
-                            msg.data.version.minor = 1;
-                            msg.data.version.patch = 2;
+                            msg.data.version.major = VERSION_MAJOR;
+                            msg.data.version.minor = VERSION_MINOR;
+                            msg.data.version.patch = VERSION_PATCH;
                             send_message(&msg, msg_buf, msg_len);                            
                             break;
                         case MSG_ABORT:

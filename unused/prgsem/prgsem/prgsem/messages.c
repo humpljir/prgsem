@@ -4,10 +4,12 @@
  * Author:    Jan Faigl
  */
 
+#include <string.h>
+
 #include "messages.h"
 
 // - function  ----------------------------------------------------------------
-bool get_message_size(uint8_t msg_type, int *size)
+bool get_message_size(uint8_t msg_type, int *len)
 {
    bool ret = true;
    switch(msg_type) {
@@ -16,23 +18,26 @@ bool get_message_size(uint8_t msg_type, int *size)
       case MSG_ABORT:
       case MSG_DONE:
       case MSG_GET_VERSION:
-         *size = 2; // 2 bytes message - id + cksum
+         *len = 2; // 2 bytes message - id + cksum
          break;
       case MSG_STARTUP:
-         *size = 2 + STARTUP_MSG_LEN;
+         *len = 2 + STARTUP_MSG_LEN;
          break;
       case MSG_VERSION:
-         *size = 2 + 3 * sizeof(uint8_t); // 2 + major, minor, patch
+         *len = 2 + 3 * sizeof(uint8_t); // 2 + major, minor, patch
+         break;
+      case MSG_SET_COMPUTE:
+         *len = 2 + 4 * sizeof(double) + 1; // 2 + 4 * params + n 
          break;
       case MSG_COMPUTE:
-         *size = 2 + 2 * sizeof(uint16_t); // 2 + chunk_id (16bit) + nbr_tasks (16bit)
+         *len = 2 + 1 + 2 * sizeof(double) + 2; // 2 + cid (8bit) + 2x(double - re, im) + 2 ( n_re, n_im)
          break;
       case MSG_COMPUTE_DATA:
-	 *size = 2 + 2 * sizeof(uint16_t) + 1; // 2 + chunk_id (16bit) + task_id (16bit) result (8bit)
-	 break;
+         *len = 2 + 4; // cid, dx, dy, iter
+         break;
       default:
-	 ret = false;
-	 break;
+         ret = false;
+         break;
    }
    return ret;
 }
@@ -66,20 +71,28 @@ bool fill_message_buf(const message *msg, uint8_t *buf, int size, int *len)
          buf[3] = msg->data.version.patch;
          *len = 4;
          break;
+      case MSG_SET_COMPUTE:
+         memcpy(&(buf[1 + 0 * sizeof(double)]), &(msg->data.set_compute.c_re), sizeof(double));
+         memcpy(&(buf[1 + 1 * sizeof(double)]), &(msg->data.set_compute.c_im), sizeof(double));
+         memcpy(&(buf[1 + 2 * sizeof(double)]), &(msg->data.set_compute.d_re), sizeof(double));
+         memcpy(&(buf[1 + 3 * sizeof(double)]), &(msg->data.set_compute.d_im), sizeof(double));
+         buf[1 + 4 * sizeof(double)] = msg->data.set_compute.n;
+         *len = 1 + 4 * sizeof(double) + 1;
+         break;
       case MSG_COMPUTE:
-         buf[1] = (uint8_t)(msg->data.compute.chunk_id >> 8); // hi - chunk_id
-         buf[2] = (uint8_t)msg->data.compute.chunk_id;        // lo - chunk_id
-         buf[3] = (uint8_t)(msg->data.compute.nbr_tasks >> 8);// hi - nbr_tasks
-         buf[4] = (uint8_t)msg->data.compute.nbr_tasks;       // lo - nbr_tasks
-         *len = 5;
+         buf[1] = msg->data.compute.cid; // cid
+         memcpy(&(buf[2 + 0 * sizeof(double)]), &(msg->data.compute.re), sizeof(double));
+         memcpy(&(buf[2 + 1 * sizeof(double)]), &(msg->data.compute.im), sizeof(double));
+         buf[2 + 2 * sizeof(double) + 0] = msg->data.compute.n_re;
+         buf[2 + 2 * sizeof(double) + 1] = msg->data.compute.n_im;
+         *len = 1 + 1 + 2 * sizeof(double) + 2;
          break;
       case MSG_COMPUTE_DATA:
-         buf[1] = (uint8_t)(msg->data.compute_data.chunk_id >> 8);// hi - chunk_id
-         buf[2] = (uint8_t)msg->data.compute_data.chunk_id;       // lo - chunk_id
-         buf[3] = (uint8_t)(msg->data.compute_data.task_id >> 8); // hi - task_id
-         buf[4] = (uint8_t)msg->data.compute_data.task_id;        // lo - task_id
-         buf[5] = msg->data.compute_data.result; // result
-         *len = 6;
+         buf[1] = msg->data.compute_data.cid;
+         buf[2] = msg->data.compute_data.i_re;
+         buf[3] = msg->data.compute_data.i_im;
+         buf[4] = msg->data.compute_data.iter;
+         *len = 5;
          break;
       default: // unknown message type
          ret = false;
@@ -128,16 +141,27 @@ bool parse_message_buf(const uint8_t *buf, int size, message *msg)
             msg->data.version.major = buf[1];
             msg->data.version.minor = buf[2];
             msg->data.version.patch = buf[3];
-	    break;
+            break;
+         case MSG_SET_COMPUTE: 
+            memcpy(&(msg->data.set_compute.c_re), &(buf[1 + 0 * sizeof(double)]), sizeof(double));
+            memcpy(&(msg->data.set_compute.c_im), &(buf[1 + 1 * sizeof(double)]), sizeof(double));
+            memcpy(&(msg->data.set_compute.d_re), &(buf[1 + 2 * sizeof(double)]), sizeof(double));
+            memcpy(&(msg->data.set_compute.d_im), &(buf[1 + 3 * sizeof(double)]), sizeof(double));
+            msg->data.set_compute.n = buf[1 + 4 * sizeof(double)];
+            break;
          case MSG_COMPUTE: // type + chunk_id + nbr_tasks
-            msg->data.compute.chunk_id = (buf[1] << 8) | buf[2];
-            msg->data.compute.nbr_tasks = (buf[3] << 8) | buf[4];
+            msg->data.compute.cid = buf[1];
+            memcpy(&(msg->data.compute.re), &(buf[2 + 0 * sizeof(double)]), sizeof(double));
+            memcpy(&(msg->data.compute.im), &(buf[2 + 1 * sizeof(double)]), sizeof(double));
+            msg->data.compute.n_re = buf[2 + 2 * sizeof(double) + 0];
+            msg->data.compute.n_im = buf[2 + 2 * sizeof(double) + 1];
             break;
          case MSG_COMPUTE_DATA:  // type + chunk_id + task_id + result
-            msg->data.compute_data.chunk_id = (buf[1] << 8) | buf[2];
-            msg->data.compute_data.task_id = (buf[3] << 8) | buf[4];
-            msg->data.compute_data.result = buf[5];
-	    break;
+            msg->data.compute_data.cid = buf[1];
+            msg->data.compute_data.i_re = buf[2];
+            msg->data.compute_data.i_im = buf[3];
+            msg->data.compute_data.iter = buf[4];
+            break;
          default: // unknown message type
             ret = false;
             break;
