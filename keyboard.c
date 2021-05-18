@@ -22,12 +22,15 @@ void *keyboard_thread(void *d)
     set_raw(true);
     while (!(q.quit))
     {
+        pthread_mutex_unlock(&(q.mtx));
         if ((c = getchar()) == 's' || c == 'e' || c == 'b' || c=='q' || c == 'h' || (c >= 1 && c <= 5) || c == 'x')
         {
             switch (c)
             {
             case 'q':
+                pthread_mutex_lock(&(q.mtx));
                 q.quit=true;
+                pthread_mutex_unlock(&(q.mtx));
                 break;
             
             default:
@@ -35,6 +38,7 @@ void *keyboard_thread(void *d)
             }
             printf("%c\n",c);
         }
+        pthread_mutex_lock(&(q.mtx));
     }
     set_raw(false);
     pthread_exit(NULL);

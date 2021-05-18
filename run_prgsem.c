@@ -24,5 +24,11 @@ int main()
         return 0;
     }
 
-    pthread_exit(NULL);
+    for (int i = 0; i < NUM_THREADS; ++i)
+    {
+        pthread_join(threads[i], NULL);
+    }
+
+    //pthread_exit(NULL);
+    return 0;
 }
