@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <pthread.h>
 
+
 void set_raw(_Bool set)
 {
     if (set)
@@ -37,7 +38,9 @@ void *keyboard_thread(void *d)
                 ev.data.msg->type = MSG_GET_VERSION;
                 queue_push(ev);
             */
-                
+                event ev = {.source = EV_KEYBOARD, .type = EV_GET_VERSION};
+                queue_push(ev);
+
                 break;
 
             case 'q':
