@@ -38,10 +38,13 @@ void *keyboard_thread(void *d)
                 ev.data.msg->type = MSG_GET_VERSION;
                 queue_push(ev);
             */
-                event ev = {.source = EV_KEYBOARD, .type = EV_GET_VERSION};
-                queue_push(ev);
-
-                break;
+                {
+                    message msg = {.type = MSG_GET_VERSION};
+                    event ev = {.source = EV_KEYBOARD, .type = EV_GET_VERSION, .data.msg=&msg};
+                    queue_push(ev);
+                    printf("jsem v zavorce \n");
+                    break;
+                }
 
             case 'q':
                 pthread_mutex_lock(&(q.mtx));
@@ -53,6 +56,7 @@ void *keyboard_thread(void *d)
                 break;
             }
             printf("%c\n", c);
+            printf("hotovo a repete!\n");
         }
         pthread_mutex_lock(&(q.mtx));
     }
