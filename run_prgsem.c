@@ -5,6 +5,7 @@
 #include "keyboard.h"
 #include "tx.h"
 #include "run_prgsem.h"
+#include "event_queue.h"
 
 #define NUM_THREADS 3
 
@@ -29,6 +30,7 @@ int main()
         pthread_join(threads[i], NULL);
     }
 
-    //pthread_exit(NULL);
-    return 0;
+    //  pthread_mutex_destroy(&(q.mtx));
+
+return 0;
 }
