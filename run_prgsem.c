@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
 #include "main.h"
@@ -11,9 +12,17 @@ int main()
 {
     pthread_t threads[NUM_THREADS];
 
-    pthread_create(&threads[0], NULL, main_thread, NULL);
-    pthread_create(&threads[1], NULL, keyboard_thread, NULL);
-    pthread_create(&threads[2], NULL, tx_thread, NULL);
+/*
+    main_thread(NULL);
+    keyboard_thread(NULL);
+    tx_thread(NULL);
+*/
 
-    return 1;
+    if(pthread_create(&threads[0], NULL, main_thread, NULL) + pthread_create(&threads[1], NULL, keyboard_thread, NULL) + pthread_create(&threads[2], NULL, tx_thread, NULL) != 0)
+    {
+        fprintf(stderr, "ERROR: Unable to create threads, terminating the program!\n");
+        return 0;
+    }
+
+    pthread_exit(NULL);
 }
