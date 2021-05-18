@@ -1,8 +1,10 @@
 #include <stdlib.h>
+#include <stdio.h>
+#include <pthread.h>
 #include "event_queue.h"
 #include "main.h"
 
-void* main_thread(void* d)
+void *main_thread(void* d)
 {
-    return NULL;
+    pthread_exit(NULL);
 }

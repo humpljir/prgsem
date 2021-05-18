@@ -1,25 +1,7 @@
-
 #include <stdbool.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include "event_queue.h"
-
-#ifndef QUEUE_CAPACITY
-#define QUEUE_CAPACITY 32
-#endif
-
-typedef struct
-{
-    event queue[QUEUE_CAPACITY];
-    int in;
-    int out;
-
-    pthread_mutex_t mtx;
-    pthread_cond_t cond;
-    bool quit;
-} queue;
-
-static queue q = { .in=0, .out=0};
 
 void queue_init(void)
 {

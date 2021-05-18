@@ -1,6 +1,11 @@
 #ifndef __EVENT_QUEUE_H__
 #define __EVENT_QUEUE_H__
 
+#ifndef QUEUE_CAPACITY
+#define QUEUE_CAPACITY 32
+#endif
+
+#include <pthread.h>
 #include "messages.h"
 
 typedef enum
@@ -46,6 +51,19 @@ typedef struct
         message *msg;
     } data;
 } event;
+
+typedef struct
+{
+    event queue[QUEUE_CAPACITY];
+    int in;
+    int out;
+
+    pthread_mutex_t mtx;
+    pthread_cond_t cond;
+    bool quit;
+} queue;
+
+static queue q = {.in = 0, .out = 0};
 
 void queue_init(void);
 void queue_cleanup(void);
