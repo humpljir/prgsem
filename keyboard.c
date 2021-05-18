@@ -1,8 +1,10 @@
 #include "keyboard.h"
 #include "event_queue.h"
+#include "messages.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
+
 
 void set_raw(_Bool set)
 {
@@ -23,20 +25,34 @@ void *keyboard_thread(void *d)
     while (!(q.quit))
     {
         pthread_mutex_unlock(&(q.mtx));
-        if ((c = getchar()) == 's' || c == 'e' || c == 'b' || c=='q' || c == 'h' || (c >= 1 && c <= 5) || c == 'x')
+        if ((c = getchar()) == 'g' || c == 'e' || c == 'b' || c == 'q' || c == 'h' || (c >= 1 && c <= 5) || c == 'x')
         {
             switch (c)
             {
+            case 'g':
+                /*
+            ***NEFUNGUJE*** ale je to pekny
+                event ev;
+                ev.source = EV_KEYBOARD;
+                ev.type = EV_GET_VERSION;
+                ev.data.msg->type = MSG_GET_VERSION;
+                queue_push(ev);
+            */
+                event ev = {.source = EV_KEYBOARD, .type = EV_GET_VERSION};
+                queue_push(ev);
+
+                break;
+
             case 'q':
                 pthread_mutex_lock(&(q.mtx));
-                q.quit=true;
+                q.quit = true;
                 pthread_mutex_unlock(&(q.mtx));
                 break;
-            
+
             default:
                 break;
             }
-            printf("%c\n",c);
+            printf("%c\n", c);
         }
         pthread_mutex_lock(&(q.mtx));
     }
