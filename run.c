@@ -4,8 +4,8 @@
 #include "main.h"
 #include "keyboard.h"
 #include "tx.h"
-#include "run_prgsem.h"
-#include "event_queue.h"
+#include "run.h"
+//#include "event_queue.h"
 
 #define NUM_THREADS 3
 
