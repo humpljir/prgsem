@@ -1,5 +1,6 @@
 #include "keyboard.h"
 #include "event_queue.h"
+#include "messages.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
@@ -19,6 +20,7 @@ void set_raw(_Bool set)
 void *keyboard_thread(void *d)
 {
     char c;
+    event *ev;
     set_raw(true);
     while (!(q.quit))
     {
@@ -31,11 +33,10 @@ void *keyboard_thread(void *d)
             /*
             ***NEFUNGUJE*** ale je to pekny
             */
-                event ev;
-                ev.source = EV_KEYBOARD;
-                ev.type = EV_GET_VERSION;
-                ev.data.msg->type = MSG_GET_VERSION;
-                queue_push(ev);
+                ev->source = EV_KEYBOARD;
+                ev->type = EV_GET_VERSION;
+                ev->data.msg->type = MSG_GET_VERSION;
+                queue_push(*ev);
                 
                 break;
 
