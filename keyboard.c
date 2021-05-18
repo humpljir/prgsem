@@ -37,14 +37,15 @@ void *keyboard_thread(void *d)
                 ev.type = EV_GET_VERSION;
                 ev.data.msg->type = MSG_GET_VERSION;
                 queue_push(ev);
-            */
+    
                 {
                     message msg = {.type = MSG_GET_VERSION};
                     event ev = {.source = EV_KEYBOARD, .type = EV_GET_VERSION, .data.msg=&msg};
                     queue_push(ev);
                     printf("jsem v zavorce \n");
-                    break;
                 }
+                */
+                    break;
 
             case 'q':
                 pthread_mutex_lock(&(q.mtx));
