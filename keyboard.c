@@ -30,13 +30,13 @@ void *keyboard_thread(void *d)
             case 'g':
             /*
             ***NEFUNGUJE*** ale je to pekny
-            
+            */
                 event ev;
                 ev.source = EV_KEYBOARD;
                 ev.type = EV_GET_VERSION;
                 ev.data.msg->type = MSG_GET_VERSION;
                 queue_push(ev);
-                */
+                
                 break;
 
             case 'q':
