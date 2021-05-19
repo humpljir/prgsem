@@ -1,5 +1,5 @@
 #include "tx.h"
-#include "event_queue.h"
+#include "own_queue.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>

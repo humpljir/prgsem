@@ -11,7 +11,6 @@
 
 int main()
 {
-    queue_init();
     pthread_t threads[NUM_THREADS];
 
     if(pthread_create(&threads[0], NULL, main_thread, NULL) + pthread_create(&threads[1], NULL, keyboard_thread, NULL) + pthread_create(&threads[2], NULL, tx_thread, NULL) != 0)
@@ -25,7 +24,7 @@ int main()
         pthread_join(threads[i], NULL);
     }
 
-    pthread_mutex_destroy(&(q.mtx));
+    pthread_mutex_destroy(&(event_queue.mtx));
 
 return 0;
 }

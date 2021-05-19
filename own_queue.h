@@ -1,9 +1,5 @@
-#ifndef __EVENT_QUEUE_H__
-#define __EVENT_QUEUE_H__
-
-#ifndef QUEUE_CAPACITY
-#define QUEUE_CAPACITY 32
-#endif
+#ifndef __OWN_QUEUE_H__
+#define __OWN_QUEUE_H__
 
 #include <pthread.h>
 #include "messages.h"
@@ -17,6 +13,8 @@ typedef enum
 
 typedef struct
 {
+    void *next;
+
     event_type type;
     uint8_t param;
     message *msg;
@@ -33,12 +31,12 @@ typedef struct
     bool quit;
 } queue;
 
-queue q = {.size = 0, .start = NULL, .end = NULL, .quit = false};
+extern queue event_queue;
 
 void queue_cleanup(void);
 
-event queue_pop(void);
+event *queue_pop();
 
-void queue_push(event ev);
+void queue_push(event *ev);
 
 #endif
