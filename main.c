@@ -12,6 +12,7 @@
 #include <unistd.h>
 
 #define MESSAGE_SIZE (sizeof(message))
+#define BUFFER_SIZE 100
 
 /*
 
@@ -110,9 +111,22 @@ void *main_thread(void *d)
 
     usleep((7 + 25) * 100); // sleep enough to transmit the 7 plus
                             // receive 25:  approx 100 uS per char transmit
-    char buf[MESSAGE_SIZE];
-    int n = read(fd, buf, sizeof buf); // read up to 100 characters if ready to read
-    printf("readed %d\n",n);
+    while(!event_queue.quit)
+    {
+        uint8_t type;
+        int len;
+        if(read(fd, &type, 1))
+        {
+            get_message_size(type, &len);
+            char buf[len];
+            usleep((len + 25) * 100);
+            if(!read(fd, &buf, sizeof buf))
+            {
+                fprintf(stderr, "error %d serial %s: %s", errno, portname, strerror(errno));
+            }
+            printf("readed [%d/%ld] %s\n", len, sizeof(message), buf);
+        }
+    }
 
     /*************************************************************/
 
