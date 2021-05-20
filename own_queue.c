@@ -31,7 +31,7 @@ void queue_push(event* ev)
 
     if (event_queue.size <= 0)
     {
-        event_queue.start=ev;
+        event_queue.start=ev; 
     }
     else
     {

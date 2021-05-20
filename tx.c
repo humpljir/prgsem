@@ -1,10 +1,8 @@
-#include "tx.h"
-#include "own_queue.h"
-#include <stdlib.h>
 #include <stdio.h>
-#include <pthread.h>
+#include "messages.h"
+#include "tx.h"
 
-void *tx_thread(void* d)
+void *tx_thread(void *d)
 {
-    pthread_exit(NULL);
+    return NULL;
 }
