@@ -9,12 +9,17 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#define CHUNK_X 80
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
 
 #define MESSAGE_SIZE (sizeof(message))
 #define BUFFER_SIZE 300
+#define SIZE_X_M 320
+#define SIZE_Y_M 240
+#define CHUNK_X 80
+#define CHUNK_Y 1
 
 /*
 
@@ -113,8 +118,7 @@ bool send_message(const message *msg, uint8_t *msg_buf, int len, int fd)
 
 void *main_thread(void *d)
 {
-    //matrix results=matrix_init(200, 200);
-    //printf("%d\n",results.table[0][0]);  
+    matrix results = matrix_init(SIZE_X_M, SIZE_Y_M);
     char *portname = "/dev/ttyACM0";
     int fd = open(portname, O_RDWR | O_NOCTTY | O_SYNC);
     if (fd < 0)
@@ -137,7 +141,7 @@ void *main_thread(void *d)
         if (event_queue.size > 0 && event_queue.start->type == EV_KEYBOARD)
         {
             message msg;
-            bool correct=true;
+            bool correct = true;
 
             event *ev = queue_pop();
             switch (ev->param)
@@ -170,29 +174,28 @@ void *main_thread(void *d)
             case '1':
             {
                 msg.type = MSG_COMPUTE;
-                msg.data.compute.cid=1;
-                msg.data.compute.re=-0.5;
-                msg.data.compute.im=-0.5;
-                msg.data.compute.n_re=80;
-                msg.data.compute.n_im=1;
+                msg.data.compute.cid = 1;
+                msg.data.compute.re = -0.5;
+                msg.data.compute.im = -0.5;
+                msg.data.compute.n_re = CHUNK_X;
+                msg.data.compute.n_im = CHUNK_Y;
                 msg.cksum = 251;
                 break;
             }
             case 'p':
             case 'c':
             default: // unknown message type
-correct=false;
+                correct = false;
                 break;
             } // end switch
             free(ev);
 
-if(correct)
-{
-    int len;
-    get_message_size(msg.type, &len);
-    uint8_t msg_buf[len];
-    send_message(&msg, msg_buf, len, fd);
-}
+            if (correct)
+            {
+                int len;
+                uint8_t msg_buf[len];
+                send_message(&msg, msg_buf, len, fd);
+            }
         }
         if (read(fd, &type, 1))
         {
@@ -239,7 +242,7 @@ if(correct)
             }
             else if (msg.type == MSG_COMPUTE_DATA)
             {
-
+                results.table[msg.data.compute_data.cid * CHUNK_X + msg.data.compute_data.i_re] = msg.data.compute_data.iter;
                 printf("\rDATA: [%d,%d] = %d\n", msg.data.compute_data.i_re, msg.data.compute_data.i_im, msg.data.compute_data.iter);
             }
             else
