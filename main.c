@@ -97,7 +97,7 @@ void set_blocking(int fd, int should_block)
 
 bool send_message(const message *msg, uint8_t *msg_buf, int len, int fd)
 {
-    printf("sending...\n");
+    printf("sending... [%d]\n",msg->type);
     fill_message_buf(msg, msg_buf, sizeof(message), &len);
     printf("msg buffer %s\n", msg_buf);
     /*
@@ -136,6 +136,7 @@ void *main_thread(void *d)
         if (event_queue.size > 0 && event_queue.start->type == EV_KEYBOARD)
         {
             message msg;
+            bool correct=true;
 
             event *ev = queue_pop();
             switch (ev->param)
@@ -157,7 +158,7 @@ void *main_thread(void *d)
                 msg.cksum = 251;
                 break;
             }
-            case '1':
+            case 'l':
             case 'a':
             {
                 msg.type = MSG_ABORT;
@@ -165,7 +166,7 @@ void *main_thread(void *d)
                 break;
             }
             case 'r':
-            case 'l':
+            case '1':
             {
                 msg.type = MSG_COMPUTE;
                 msg.data.compute.cid=1;
@@ -179,15 +180,18 @@ void *main_thread(void *d)
             case 'p':
             case 'c':
             default: // unknown message type
-
+correct=false;
                 break;
             } // end switch
             free(ev);
 
-            int len;
-            get_message_size(msg.type, &len);
-            uint8_t msg_buf[len];
-            send_message(&msg, msg_buf, len, fd);
+if(correct)
+{
+    int len;
+    get_message_size(msg.type, &len);
+    uint8_t msg_buf[len];
+    send_message(&msg, msg_buf, len, fd);
+}
         }
         if (read(fd, &type, 1))
         {
@@ -217,6 +221,7 @@ void *main_thread(void *d)
             */
             message msg;
             parse_message_buf(msg_buf, len, &msg);
+
             if (msg.type == MSG_STARTUP)
             {
                 printf("message type: %d [%s]\n", msg.type, msg.data.startup.message);
@@ -229,9 +234,13 @@ void *main_thread(void *d)
             {
                 printf("NUCLEO: message error!\n");
             }
+            else if (msg.type == MSG_COMPUTE_DATA)
+            {
+                printf("Data computed: %d\n",msg.data.compute_data.iter);
+            }
             else
             {
-                printf("nestandartni msg %d\n", msg.type);
+                printf("NUCLEO: nestandartni msg type %d\n", msg.type);
             }
         }
     }
