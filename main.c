@@ -97,6 +97,7 @@ void set_blocking(int fd, int should_block)
 
 bool send_message(const message *msg, uint8_t *msg_buf, int len, int fd)
 {
+    printf("sending...\n");
     fill_message_buf(msg, msg_buf, sizeof(message), &len);
     printf("msg buffer %s\n", msg_buf);
     /*
@@ -146,6 +147,16 @@ void *main_thread(void *d)
                 break;
             }
             case 's':
+            {
+                msg.type = MSG_SET_COMPUTE;
+                msg.data.set_compute.c_re = -0.5;
+                msg.data.set_compute.c_im = -0.5;
+                msg.data.set_compute.d_re = 0.5;
+                msg.data.set_compute.d_im = 0.5;
+                msg.data.set_compute.n = 60;
+                msg.cksum = 251;
+                break;
+            }
             case '1':
             case 'a':
             {
