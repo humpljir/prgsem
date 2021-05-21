@@ -173,7 +173,7 @@ void *main_thread(void *d)
             get_message_size(type, &len);
             uint8_t msg_buf[len];
             msg_buf[0] = type;
-            printf("readed [%d => %d]\n", type, len);
+            //printf("readed [%d => %d]\n", type, len);
             for (int i = 1; i < len; i++)
             {
                 uint8_t r = serial_getc_timeout(fd, 200, &type);

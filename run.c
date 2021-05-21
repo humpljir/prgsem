@@ -25,6 +25,7 @@ int main()
     }
 
     pthread_mutex_destroy(&(event_queue.mtx));
+    queue_cleanup();
 
 return 0;
 }
