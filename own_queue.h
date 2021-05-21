@@ -33,7 +33,7 @@ typedef struct
 
 extern queue event_queue;
 
-void queue_cleanup(void);
+void queue_cleanup();
 
 event *queue_pop();
 

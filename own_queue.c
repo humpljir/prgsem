@@ -2,9 +2,12 @@
 
 queue event_queue = {.size = 0, .start = NULL, .end = NULL, .quit = false};
 
-void queue_cleanup(void)
+void queue_cleanup()
 {
-
+    while (event_queue.size > 0)
+    {
+        free(queue_pop());
+    }
 }
 
 event *queue_pop()
