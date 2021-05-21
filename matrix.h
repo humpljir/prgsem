@@ -5,7 +5,7 @@ typedef struct
 {
     int re;
     int im;
-    int **table;
+    int *table;
 } matrix;
 
 matrix matrix_init(int re, int im);

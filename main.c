@@ -173,8 +173,8 @@ void *main_thread(void *d)
                 msg.data.compute.cid=1;
                 msg.data.compute.re=-0.5;
                 msg.data.compute.im=-0.5;
-                msg.data.compute.n_re=200;
-                msg.data.compute.n_im=200;
+                msg.data.compute.n_re=80;
+                msg.data.compute.n_im=1;
                 msg.cksum = 251;
                 break;
             }
