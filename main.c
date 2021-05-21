@@ -121,6 +121,7 @@ void *main_thread(void *d)
             get_message_size(type, &len);
             uint8_t msg_buf[len];
             msg_buf[0] = type;
+            printf("readed [%d => %d]\n", type, len);
             for (int i = 1; i < len; i++)
             {
                 uint8_t r = serial_getc_timeout(fd, 200, &type);
@@ -141,7 +142,6 @@ void *main_thread(void *d)
                 fprintf(stderr, "error %d serial %s: %s", errno, portname, strerror(errno));
             }
             */
-            printf("readed [%d => %d] %s\n", type, len, msg_buf);
             message msg;
             parse_message_buf(msg_buf, len, &msg);
             printf("message type: %d [%s]\n", msg.type,msg.data.startup.message);
