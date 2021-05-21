@@ -148,6 +148,11 @@ void *main_thread(void *d)
             case 's':
             case '1':
             case 'a':
+            {
+                msg.type = MSG_ABORT;
+                msg.cksum = 251;
+                break;
+            }
             case 'r':
             case 'l':
             case 'p':
