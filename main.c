@@ -108,7 +108,7 @@ void *main_thread(void *d)
     set_interface_attribs(fd, B115200, 0); // set speed to 115,200 bps, 8n1 (no parity)
     set_blocking(fd, 0);                   // set no blocking
 
-    write(fd, "hello!\n", 7); // send 7 character greeting
+    //write(fd, "hello!\n", 7); // send 7 character greeting
 
     usleep((7 + 25) * 100); // sleep enough to transmit the 7 plus
                             // receive 25:  approx 100 uS per char transmit
@@ -116,6 +116,52 @@ void *main_thread(void *d)
     {
         uint8_t type;
         int len;
+        if (event_queue.size > 0 && event_queue.start->type == EV_KEYBOARD)
+        {
+            message msg;
+
+            event *ev=queue_pop();
+            switch (ev->param)
+            {
+            case 'g':
+            {
+            msg.type = MSG_GET_VERSION;
+            msg.cksum = 252;
+            break;
+            }
+            case 's':
+            case '1':
+            case 'a':
+            case 'r':
+            case 'l':
+            case 'p':
+            case 'c':
+            default: // unknown message type
+            
+                break;
+            } // end switch
+            free(ev);
+
+            int len;
+            get_message_size(msg.type,&len);
+                uint8_t msg_buf[len];
+                fill_message_buf(&msg, msg_buf, sizeof(message), &len);
+
+/*
+                int i = 0;
+                while ((i == 0) || i < len)
+                { //end reading when message has been read
+                    msg_buf = msg[i];
+                    i += 1;
+                    tx_in = (tx_in + 1) % BUF_SIZE;
+                }                               // send buffer has been put to tx buffer, enable Tx interrupt for sending it out
+                */
+
+               msg_buf[0]=msg.type;
+               msg_buf[1]=msg.cksum;
+                write(fd, msg_buf, len);
+
+        }
         if(read(fd, &type, 1))
         {
             get_message_size(type, &len);
@@ -144,7 +190,22 @@ void *main_thread(void *d)
             */
             message msg;
             parse_message_buf(msg_buf, len, &msg);
-            printf("message type: %d [%s]\n", msg.type,msg.data.startup.message);
+            if (msg.type==MSG_STARTUP)
+            {
+                printf("message type: %d [%s]\n", msg.type, msg.data.startup.message);
+            }
+            else if (msg.type==MSG_VERSION)
+            {
+                printf("message type: %d [%d.%d.%d]\n", msg.type, msg.data.version.major, msg.data.version.minor, msg.data.version.patch);
+            }
+            else if (msg.type == MSG_ERROR)
+            {
+                printf("NUCLEO: message error!\n");
+            }
+            else
+            {
+                printf("nestandartni msg %d\n",msg.type);
+            }
         }
     }
 
