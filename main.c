@@ -4,6 +4,7 @@
 #include "own_queue.h"
 #include "messages.h"
 #include "main.h"
+#include "matrix.h"
 #include "prg_serial_nonblock.h"
 
 #include <errno.h>
@@ -13,7 +14,7 @@
 #include <unistd.h>
 
 #define MESSAGE_SIZE (sizeof(message))
-#define BUFFER_SIZE 100
+#define BUFFER_SIZE 300
 
 /*
 
@@ -97,9 +98,7 @@ void set_blocking(int fd, int should_block)
 
 bool send_message(const message *msg, uint8_t *msg_buf, int len, int fd)
 {
-    printf("sending...\n");
     fill_message_buf(msg, msg_buf, sizeof(message), &len);
-    printf("msg buffer %s\n", msg_buf);
     /*
     int i = 0;
     while ((i == 0) || i < len)
@@ -114,6 +113,8 @@ bool send_message(const message *msg, uint8_t *msg_buf, int len, int fd)
 
 void *main_thread(void *d)
 {
+
+    matrix matrix_init(200, 200);
     char *portname = "/dev/ttyACM0";
     int fd = open(portname, O_RDWR | O_NOCTTY | O_SYNC);
     if (fd < 0)
@@ -136,6 +137,7 @@ void *main_thread(void *d)
         if (event_queue.size > 0 && event_queue.start->type == EV_KEYBOARD)
         {
             message msg;
+            bool correct=true;
 
             event *ev = queue_pop();
             switch (ev->param)
@@ -157,7 +159,7 @@ void *main_thread(void *d)
                 msg.cksum = 251;
                 break;
             }
-            case '1':
+            case 'l':
             case 'a':
             {
                 msg.type = MSG_ABORT;
@@ -165,19 +167,32 @@ void *main_thread(void *d)
                 break;
             }
             case 'r':
-            case 'l':
+            case '1':
+            {
+                msg.type = MSG_COMPUTE;
+                msg.data.compute.cid=1;
+                msg.data.compute.re=-0.5;
+                msg.data.compute.im=-0.5;
+                msg.data.compute.n_re=200;
+                msg.data.compute.n_im=200;
+                msg.cksum = 251;
+                break;
+            }
             case 'p':
             case 'c':
             default: // unknown message type
-
+correct=false;
                 break;
             } // end switch
             free(ev);
 
-            int len;
-            get_message_size(msg.type, &len);
-            uint8_t msg_buf[len];
-            send_message(&msg, msg_buf, len, fd);
+if(correct)
+{
+    int len;
+    get_message_size(msg.type, &len);
+    uint8_t msg_buf[len];
+    send_message(&msg, msg_buf, len, fd);
+}
         }
         if (read(fd, &type, 1))
         {
@@ -207,21 +222,29 @@ void *main_thread(void *d)
             */
             message msg;
             parse_message_buf(msg_buf, len, &msg);
+
             if (msg.type == MSG_STARTUP)
             {
-                printf("message type: %d [%s]\n", msg.type, msg.data.startup.message);
+                printf("message type: %d [%s]                                          \r", msg.type, msg.data.startup.message);
             }
             else if (msg.type == MSG_VERSION)
             {
-                printf("message type: %d [%d.%d.%d]\n", msg.type, msg.data.version.major, msg.data.version.minor, msg.data.version.patch);
+                //system("stty -raw echo"); // disable raw, enable echo
+                printf("message type: %d [%d.%d.%d]                                          \r", msg.type, msg.data.version.major, msg.data.version.minor, msg.data.version.patch);
+                //system("stty raw -echo"); // enable raw, disable echo
             }
             else if (msg.type == MSG_ERROR)
             {
-                printf("NUCLEO: message error!\n");
+                printf("NUCLEO: message error!                                          \r");
+            }
+            else if (msg.type == MSG_COMPUTE_DATA)
+            {
+
+                printf("DATA: [%d,%d] = %d                                          \r", msg.data.compute_data.i_re, msg.data.compute_data.i_im, msg.data.compute_data.iter);
             }
             else
             {
-                printf("nestandartni msg %d\n", msg.type);
+                printf("NUCLEO: nestandartni msg type [%d] %s                                          \r", msg.type, msg_buf);
             }
         }
     }

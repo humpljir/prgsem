@@ -46,13 +46,13 @@ typedef struct {
 } msg_set_compute;
 
 typedef struct {
-   uint8_t cid;  // chunk idMSG_GET_VERSION
+   uint8_t cid;  // chunk id
    double re;    // start of the x-coords (real)
    double im;    // start of the y-coords (imaginary)
    uint8_t n_re; // number of cells in x-coords
    uint8_t n_im; // number of cells in y-coords
 } msg_compute;
-
+ 
 typedef struct {
    uint8_t cid;  // chunk id
    uint8_t i_re; // x-coords 
