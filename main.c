@@ -108,7 +108,7 @@ void *main_thread(void *d)
     set_interface_attribs(fd, B115200, 0); // set speed to 115,200 bps, 8n1 (no parity)
     set_blocking(fd, 0);                   // set no blocking
 
-    write(fd, "hello!\n", 7); // send 7 character greeting
+    //write(fd, "hello!\n", 7); // send 7 character greeting
 
     usleep((7 + 25) * 100); // sleep enough to transmit the 7 plus
                             // receive 25:  approx 100 uS per char transmit
@@ -116,6 +116,25 @@ void *main_thread(void *d)
     {
         uint8_t type;
         int len;
+        if (event_queue.size > 0 && event_queue.start->type == EV_KEYBOARD)
+        {
+            event *ev=queue_pop();
+            switch (ev->param)
+            {
+            case 'g':
+            case 's':
+            case '1':
+            case 'a':
+            case 'r':
+            case 'l':
+            case 'p':
+            case 'c':
+            default: // unknown message type
+            
+                break;
+            } // end switch
+            free(ev);
+        }
         if(read(fd, &type, 1))
         {
             get_message_size(type, &len);
