@@ -225,26 +225,26 @@ if(correct)
 
             if (msg.type == MSG_STARTUP)
             {
-                printf("message type: %d [%s]                                          \r", msg.type, msg.data.startup.message);
+                printf("\rmessage type: %d [%s]\n", msg.type, msg.data.startup.message);
             }
             else if (msg.type == MSG_VERSION)
             {
                 //system("stty -raw echo"); // disable raw, enable echo
-                printf("message type: %d [%d.%d.%d]                                          \r", msg.type, msg.data.version.major, msg.data.version.minor, msg.data.version.patch);
+                printf("\rmessage type: %d [%d.%d.%d]\n", msg.type, msg.data.version.major, msg.data.version.minor, msg.data.version.patch);
                 //system("stty raw -echo"); // enable raw, disable echo
             }
             else if (msg.type == MSG_ERROR)
             {
-                printf("NUCLEO: message error!                                          \r");
+                printf("\rNUCLEO: message error!\n");
             }
             else if (msg.type == MSG_COMPUTE_DATA)
             {
 
-                printf("DATA: [%d,%d] = %d                                          \r", msg.data.compute_data.i_re, msg.data.compute_data.i_im, msg.data.compute_data.iter);
+                printf("\rDATA: [%d,%d] = %d\n", msg.data.compute_data.i_re, msg.data.compute_data.i_im, msg.data.compute_data.iter);
             }
             else
             {
-                printf("NUCLEO: nestandartni msg type [%d] %s                                          \r", msg.type, msg_buf);
+                printf("\rNUCLEO: nestandartni msg type [%d] %s\n", msg.type, msg_buf);
             }
         }
     }
