@@ -44,7 +44,7 @@ int set_interface_attribs(int fd, int speed, int parity)
     struct termios tty;
     if (tcgetattr(fd, &tty) != 0)
     {
-        fprintf(stderr,"error %d from tcgetattr", errno);
+        fprintf(stderr, "error %d from tcgetattr", errno);
         return -1;
     }
 
@@ -72,7 +72,7 @@ int set_interface_attribs(int fd, int speed, int parity)
 
     if (tcsetattr(fd, TCSANOW, &tty) != 0)
     {
-        fprintf(stderr,"error %d from tcsetattr", errno);
+        fprintf(stderr, "error %d from tcsetattr", errno);
         return -1;
     }
     return 0;
@@ -84,7 +84,7 @@ void set_blocking(int fd, int should_block)
     memset(&tty, 0, sizeof tty);
     if (tcgetattr(fd, &tty) != 0)
     {
-        fprintf(stderr,"error %d from tggetattr", errno);
+        fprintf(stderr, "error %d from tggetattr", errno);
         return;
     }
 
@@ -92,7 +92,23 @@ void set_blocking(int fd, int should_block)
     tty.c_cc[VTIME] = 5; // 0.5 seconds read timeout
 
     if (tcsetattr(fd, TCSANOW, &tty) != 0)
-        fprintf(stderr,"error %d setting term attributes", errno);
+        fprintf(stderr, "error %d setting term attributes", errno);
+}
+
+bool send_message(const message *msg, uint8_t *msg_buf, int len, int fd)
+{
+    fill_message_buf(msg, msg_buf, sizeof(message), &len);
+    printf("msg buffer %s\n", msg_buf);
+    /*
+    int i = 0;
+    while ((i == 0) || i < len)
+    { //end reading when message has been read
+        msg_buf[i] = msg[i];
+        i += 1;
+    } // send buffer has been put to tx buffer, enable Tx interrupt for sending it out
+*/
+    write(fd, msg_buf, len);
+    return true;
 }
 
 void *main_thread(void *d)
@@ -101,7 +117,7 @@ void *main_thread(void *d)
     int fd = open(portname, O_RDWR | O_NOCTTY | O_SYNC);
     if (fd < 0)
     {
-        fprintf(stderr,"error %d opening %s: %s", errno, portname, strerror(errno));
+        fprintf(stderr, "error %d opening %s: %s", errno, portname, strerror(errno));
         return NULL;
     }
 
@@ -112,7 +128,7 @@ void *main_thread(void *d)
 
     usleep((7 + 25) * 100); // sleep enough to transmit the 7 plus
                             // receive 25:  approx 100 uS per char transmit
-    while(!event_queue.quit)
+    while (!event_queue.quit)
     {
         uint8_t type;
         int len;
@@ -120,14 +136,14 @@ void *main_thread(void *d)
         {
             message msg;
 
-            event *ev=queue_pop();
+            event *ev = queue_pop();
             switch (ev->param)
             {
             case 'g':
             {
-            msg.type = MSG_GET_VERSION;
-            msg.cksum = 252;
-            break;
+                msg.type = MSG_GET_VERSION;
+                msg.cksum = 251;
+                break;
             }
             case 's':
             case '1':
@@ -137,32 +153,17 @@ void *main_thread(void *d)
             case 'p':
             case 'c':
             default: // unknown message type
-            
+
                 break;
             } // end switch
             free(ev);
 
             int len;
-            get_message_size(msg.type,&len);
-                uint8_t msg_buf[len];
-                fill_message_buf(&msg, msg_buf, sizeof(message), &len);
-
-/*
-                int i = 0;
-                while ((i == 0) || i < len)
-                { //end reading when message has been read
-                    msg_buf = msg[i];
-                    i += 1;
-                    tx_in = (tx_in + 1) % BUF_SIZE;
-                }                               // send buffer has been put to tx buffer, enable Tx interrupt for sending it out
-                */
-
-               msg_buf[0]=msg.type;
-               msg_buf[1]=msg.cksum;
-                write(fd, msg_buf, len);
-
+            get_message_size(msg.type, &len);
+            uint8_t msg_buf[len];
+            send_message(&msg, msg_buf, len, fd);
         }
-        if(read(fd, &type, 1))
+        if (read(fd, &type, 1))
         {
             get_message_size(type, &len);
             uint8_t msg_buf[len];
@@ -190,11 +191,11 @@ void *main_thread(void *d)
             */
             message msg;
             parse_message_buf(msg_buf, len, &msg);
-            if (msg.type==MSG_STARTUP)
+            if (msg.type == MSG_STARTUP)
             {
                 printf("message type: %d [%s]\n", msg.type, msg.data.startup.message);
             }
-            else if (msg.type==MSG_VERSION)
+            else if (msg.type == MSG_VERSION)
             {
                 printf("message type: %d [%d.%d.%d]\n", msg.type, msg.data.version.major, msg.data.version.minor, msg.data.version.patch);
             }
@@ -204,15 +205,14 @@ void *main_thread(void *d)
             }
             else
             {
-                printf("nestandartni msg %d\n",msg.type);
+                printf("nestandartni msg %d\n", msg.type);
             }
         }
     }
 
     /*************************************************************/
 
-
-/*
+    /*
     pc.baud(115200);
     pc.attach(&Rx_interrupt, Serial::RxIrq); // attach interrupt handler to receive data
     pc.attach(&Tx_interrupt, Serial::TxIrq); // attach interrupt handler to transmit data
