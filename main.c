@@ -4,6 +4,7 @@
 #include "own_queue.h"
 #include "messages.h"
 #include "main.h"
+#include "prg_serial_nonblock.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -94,13 +95,6 @@ void set_blocking(int fd, int should_block)
         fprintf(stderr,"error %d setting term attributes", errno);
 }
 
-void print_hex(const char *s)
-{
-    while (*s)
-        printf("%02x", (unsigned int)*s++);
-    printf("\n");
-}
-
 void *main_thread(void *d)
 {
     char *portname = "/dev/ttyACM0";
@@ -125,13 +119,32 @@ void *main_thread(void *d)
         if(read(fd, &type, 1))
         {
             get_message_size(type, &len);
-            char buf[len];
+            uint8_t msg_buf[len];
+            msg_buf[0] = type;
+            for (int i = 1; i < len; i++)
+            {
+                uint8_t r = serial_getc_timeout(fd, 200, &type);
+                if (r > 0) // successfully read
+                {
+                    msg_buf[i] = type;
+                }
+                else
+                {
+                    fprintf(stderr, "WARNING: error reading message from nucleo 1\n");
+                    break;
+                }
+            }
             usleep((len + 25) * 200);
-            if(!read(fd, &buf, sizeof buf))
+            /*
+            if (!read(fd, &msg_buf, sizeof msg_buf))
             {
                 fprintf(stderr, "error %d serial %s: %s", errno, portname, strerror(errno));
             }
-            printf("readed [%d => %d] %s hex: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", type,len, buf, buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7], buf[8], buf[9], buf[10]);
+            */
+            printf("readed [%d => %d] %s\n", type, len, msg_buf);
+            message msg;
+            parse_message_buf(msg_buf, len, &msg);
+            printf("message type: %d [%s]\n", msg.type,msg.data.startup.message);
         }
     }
 
