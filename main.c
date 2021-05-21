@@ -113,8 +113,8 @@ bool send_message(const message *msg, uint8_t *msg_buf, int len, int fd)
 
 void *main_thread(void *d)
 {
-
-    matrix matrix_init(200, 200);
+    //matrix results=matrix_init(200, 200);
+    //printf("%d\n",results.table[0][0]);  
     char *portname = "/dev/ttyACM0";
     int fd = open(portname, O_RDWR | O_NOCTTY | O_SYNC);
     if (fd < 0)
