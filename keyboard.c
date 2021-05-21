@@ -45,6 +45,7 @@ void *keyboard_thread(void *d)
         }
         pthread_mutex_lock(&(event_queue.mtx));
     }
+    
     set_raw(false);
     pthread_exit(NULL);
 }
