@@ -166,6 +166,16 @@ void *main_thread(void *d)
             }
             case 'r':
             case 'l':
+            {
+                msg.type = MSG_COMPUTE;
+                msg.data.compute.cid=1;
+                msg.data.compute.re=1;
+                msg.data.compute.im=1;
+                msg.data.compute.n_re=200;
+                msg.data.compute.n_im=200;
+                msg.cksum = 251;
+                break;
+            }
             case 'p':
             case 'c':
             default: // unknown message type
