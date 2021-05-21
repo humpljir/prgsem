@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <pthread.h>
 
-
 void set_raw(_Bool set)
 {
     if (set)
@@ -25,26 +24,24 @@ void *keyboard_thread(void *d)
     while (!(event_queue.quit))
     {
         pthread_mutex_unlock(&(event_queue.mtx));
-        if ((c = getchar()) == 'g' || c == 'e' || c == 'b' || c == 'q' || c == 'h' || (c >= 1 && c <= 5) || c == 'x')
+        c = getchar();
+        switch (c)
         {
-            switch (c)
-            {
-            case 'q':
-                pthread_mutex_lock(&(event_queue.mtx));
-                event_queue.quit = true;
-                pthread_mutex_unlock(&(event_queue.mtx));
-                break;
+        case 'q':
+            pthread_mutex_lock(&(event_queue.mtx));
+            event_queue.quit = true;
+            pthread_mutex_unlock(&(event_queue.mtx));
+            break;
 
-            default:
-            {
-                event *ev = (event *)malloc(sizeof(event));
-                ev->type = EV_KEYBOARD;
-                ev->param = c;
-                ev->msg = NULL;
-                queue_push(ev);
-                break;
-            }
-            }
+        default:
+        {
+            event *ev = (event *)malloc(sizeof(event));
+            ev->type = EV_KEYBOARD;
+            ev->param = c;
+            ev->msg = NULL;
+            queue_push(ev);
+            break;
+        }
         }
         pthread_mutex_lock(&(event_queue.mtx));
     }

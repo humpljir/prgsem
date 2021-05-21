@@ -1,4 +1,5 @@
 #include "own_queue.h"
+#include <stdlib.h>
 
 queue event_queue = {.size = 0, .start = NULL, .end = NULL, .quit = false};
 
